@@ -25,11 +25,9 @@ describe('MQTT Nodes', function () {
         await helper.unload();
     });
 
-    it('should be loaded and have default values (MQTT V4)', function (done) {
-        this.timeout = 2000;
+    it('should be loaded and have default values (MQTT V4)', async function () {
         const { flow, nodes } = buildBasicMQTTSendRecvFlow({ id: "mqtt.v4.broker", name: "mqtt_broker", autoConnect: false }, { id: "mqtt.v4.in", topic: "in_topic" }, { id: "mqtt.v4.out", topic: "out_topic" });
-        helper.load(mqttNodes, flow, function () {
-            try {
+        await helper.load(mqttNodes, flow);
         const mqttIn = helper.getNode("mqtt.v4.in");
         const mqttOut = helper.getNode("mqtt.v4.out");
         const mqttBroker = helper.getNode("mqtt.v4.broker");
@@ -62,17 +60,11 @@ describe('MQTT Nodes', function () {
         //as this is not a v5 connection, ensure v5 properties are not present
         mqttBroker.options.should.not.have.property('protocolVersion', 5);
         mqttBroker.options.should.not.have.property('properties');
-        done();
-            } catch (error) {
-        done(error)
-            }
-        });
+
     });
-    it('should be loaded and have default values (MQTT V5)', function (done) {
-        this.timeout = 2000;
+    it('should be loaded and have default values (MQTT V5)', async function () {
         const { flow, nodes } = buildBasicMQTTSendRecvFlow({ id: "mqtt.v5.broker", name: "mqtt_broker", autoConnect: false, cleansession: false, clientid: 'clientid', keepalive: 35, sessionExpiry: '6000', protocolVersion: '5', userProps: {"prop": "val"}}, { id: "mqtt.v5.in", topic: "in_topic" }, { id: "mqtt.v5.out", topic: "out_topic" });
-        helper.load(mqttNodes, flow, function () {
-            try {
+        await helper.load(mqttNodes, flow);
         const mqttIn = helper.getNode("mqtt.v5.in");
         const mqttOut = helper.getNode("mqtt.v5.out");
         const mqttBroker = helper.getNode("mqtt.v5.broker");
@@ -105,11 +97,7 @@ describe('MQTT Nodes', function () {
         mqttBroker.options.should.have.property('protocolVersion', 5);
         mqttBroker.options.should.have.property('properties');
         mqttBroker.options.properties.should.have.property('sessionExpiryInterval');
-        done();
-            } catch (error) {
-        done(error)
-            }
-        });
+
     });
     it('should use the url from a repeated "connect" action', function (done) {
         const { flow } = buildBasicMQTTSendRecvFlow({ id: "mqtt.broker", name: "mqtt_broker", broker: "localhost", port: 1883, autoConnect: false }, { id: "mqtt.in", topic: "in_topic" }, { id: "mqtt.out", topic: "out_topic" });
@@ -914,3 +902,4 @@ function nextTopic(topic) {
 }
 
 //#endregion HELPERS 
+
