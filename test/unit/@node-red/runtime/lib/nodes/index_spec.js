@@ -175,39 +175,28 @@ describe("red/nodes/index", function() {
             var log = NR_TEST_UTILS.require("@node-red/util").log;
             var RED = NR_TEST_UTILS.require("node-red/lib/red.js");
 
-            var userDir = path.join(__dirname,".testUserHome");
-            before(function(done) {
-                sinon.stub(log,"log").callsFake(function(){});
-                fs.remove(userDir,function(err) {
-                    fs.mkdir(userDir,function() {
-                        sinon.stub(index, 'load').callsFake(function() {
-                            return new Promise(function(resolve,reject){
-                                resolve([]);
-                            });
-                        });
-                        sinon.stub(localfilesystem, 'getCredentials').callsFake(function() {
-                            return new Promise(function(resolve,reject) {
-                                resolve({"tab1":{"b":1,"c":2}});
-                            });
-                        }) ;
-                        RED.init(http.createServer(function(req,res){app(req,res)}),
-                        {userDir: userDir});
-                        runtime.start().then(function () {
-                            done();
-                        });
-                    });
-                });
+            var userDir;
+            before(async function() {
+                sinon.stub(log, "log").callsFake(function() {});
+                userDir = await fs.mkdtemp(path.join(require("os").tmpdir(), "nr-runtime-nodes-"));
+                sinon.stub(index, "load").resolves([]);
+                sinon.stub(localfilesystem, "getCredentials").resolves({"tab1":{"b":1,"c":2}});
+                RED.init(http.createServer(function(req,res) { app(req,res); }), {userDir: userDir});
+                await runtime.start();
             });
 
-            after(function(done) {
-                fs.remove(userDir,function() {
-                    runtime.stop().then(function() {
-                        index.load.restore();
-                        localfilesystem.getCredentials.restore();
-                        log.log.restore();
-                        done();
-                    });
-                });
+            after(async function() {
+                try {
+                    await runtime.stop();
+                    // Queue a real settings write behind earlier writes before removing the directory.
+                    var settingsStorage = NR_TEST_UTILS.require("@node-red/runtime/lib/storage");
+                    await settingsStorage.saveSettings({});
+                } finally {
+                    index.load.restore();
+                    localfilesystem.getCredentials.restore();
+                    log.log.restore();
+                    await fs.remove(userDir);
+                }
             });
 
             it('definition defined',function() {
