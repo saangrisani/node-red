@@ -21,97 +21,83 @@ describe('MQTT Nodes', function () {
         helper.stopServer(done);
     });
 
-    afterEach(function () {
-        try {
-            helper.unload();
-        } catch (error) { }
+    afterEach(async function () {
+        await helper.unload();
     });
 
-    it('should be loaded and have default values (MQTT V4)', function (done) {
-        this.timeout = 2000;
-        const { flow, nodes } = buildBasicMQTTSendRecvFlow({ id: "mqtt.broker", name: "mqtt_broker", autoConnect: false }, { id: "mqtt.in", topic: "in_topic" }, { id: "mqtt.out", topic: "out_topic" });
-        helper.load(mqttNodes, flow, function () {
-            try {
-                const mqttIn = helper.getNode("mqtt.in");
-                const mqttOut = helper.getNode("mqtt.out");
-                const mqttBroker = helper.getNode("mqtt.broker");
+    it('should be loaded and have default values (MQTT V4)', async function () {
+        const { flow, nodes } = buildBasicMQTTSendRecvFlow({ id: "mqtt.v4.broker", name: "mqtt_broker", autoConnect: false }, { id: "mqtt.v4.in", topic: "in_topic" }, { id: "mqtt.v4.out", topic: "out_topic" });
+        await helper.load(mqttNodes, flow);
+        const mqttIn = helper.getNode("mqtt.v4.in");
+        const mqttOut = helper.getNode("mqtt.v4.out");
+        const mqttBroker = helper.getNode("mqtt.v4.broker");
 
-                should(mqttIn).be.type("object", "mqtt in node should be an object")
-                mqttIn.should.have.property('broker', nodes.mqtt_broker.id); //should be the id of the broker node
-                mqttIn.should.have.property('datatype', 'utf8'); //default: 'utf8'
-                mqttIn.should.have.property('isDynamic', false);  //default: false
-                mqttIn.should.have.property('inputs', 0); //default: 0 
-                mqttIn.should.have.property('qos', 2); //default: 2
-                mqttIn.should.have.property('topic', "in_topic");
-                mqttIn.should.have.property('wires', [["helper.node"]]);
+        should(mqttIn).be.type("object", "mqtt in node should be an object")
+        mqttIn.should.have.property('broker', nodes.mqtt_broker.id); //should be the id of the broker node
+        mqttIn.should.have.property('datatype', 'utf8'); //default: 'utf8'
+        mqttIn.should.have.property('isDynamic', false);  //default: false
+        mqttIn.should.have.property('inputs', 0); //default: 0 
+        mqttIn.should.have.property('qos', 2); //default: 2
+        mqttIn.should.have.property('topic', "in_topic");
+        mqttIn.should.have.property('wires', [["helper.node"]]);
 
-                should(mqttOut).be.type("object", "mqtt out node should be an object")
-                mqttOut.should.have.property('broker', nodes.mqtt_broker.id); //should be the id of the broker node
-                mqttOut.should.have.property('topic', "out_topic");
+        should(mqttOut).be.type("object", "mqtt out node should be an object")
+        mqttOut.should.have.property('broker', nodes.mqtt_broker.id); //should be the id of the broker node
+        mqttOut.should.have.property('topic', "out_topic");
 
-                should(mqttBroker).be.type("object", "mqtt broker node should be an object")
-                mqttBroker.should.have.property('broker', BROKER_HOST);
-                mqttBroker.should.have.property('port', BROKER_PORT);
-                mqttBroker.should.have.property('brokerurl');
-                mqttBroker.should.have.property('autoUnsubscribe', true); //default: true
-                mqttBroker.should.have.property('autoConnect', false);//Set "autoConnect:false" in brokerOptions 
-                mqttBroker.should.have.property('options');
-                mqttBroker.options.should.have.property('clean', true);
-                mqttBroker.options.should.have.property('clientId');
-                mqttBroker.options.clientId.should.containEql('nodered');
-                mqttBroker.options.should.have.property('keepalive').type("number");
-                mqttBroker.options.should.have.property('reconnectPeriod').type("number");
-                //as this is not a v5 connection, ensure v5 properties are not present
-                mqttBroker.options.should.not.have.property('protocolVersion', 5);
-                mqttBroker.options.should.not.have.property('properties');
-                done();
-            } catch (error) {
-                done(error)
-            }
-        });
+        should(mqttBroker).be.type("object", "mqtt broker node should be an object")
+        mqttBroker.should.have.property('broker', BROKER_HOST);
+        mqttBroker.should.have.property('port', BROKER_PORT);
+        mqttBroker.should.have.property('brokerurl');
+        mqttBroker.should.have.property('autoUnsubscribe', true); //default: true
+        mqttBroker.should.have.property('autoConnect', false);//Set "autoConnect:false" in brokerOptions 
+        mqttBroker.should.have.property('options');
+        mqttBroker.options.should.have.property('clean', true);
+        mqttBroker.options.should.have.property('clientId');
+        mqttBroker.options.clientId.should.containEql('nodered');
+        mqttBroker.options.should.have.property('keepalive').type("number");
+        mqttBroker.options.should.have.property('reconnectPeriod').type("number");
+        //as this is not a v5 connection, ensure v5 properties are not present
+        mqttBroker.options.should.not.have.property('protocolVersion', 5);
+        mqttBroker.options.should.not.have.property('properties');
+
     });
-    it('should be loaded and have default values (MQTT V5)', function (done) {
-        this.timeout = 2000;
-        const { flow, nodes } = buildBasicMQTTSendRecvFlow({ id: "mqtt.broker", name: "mqtt_broker", autoConnect: false, cleansession: false, clientid: 'clientid', keepalive: 35, sessionExpiry: '6000', protocolVersion: '5', userProps: {"prop": "val"}}, { id: "mqtt.in", topic: "in_topic" }, { id: "mqtt.out", topic: "out_topic" });
-        helper.load(mqttNodes, flow, function () {
-            try {
-                const mqttIn = helper.getNode("mqtt.in");
-                const mqttOut = helper.getNode("mqtt.out");
-                const mqttBroker = helper.getNode("mqtt.broker");
+    it('should be loaded and have default values (MQTT V5)', async function () {
+        const { flow, nodes } = buildBasicMQTTSendRecvFlow({ id: "mqtt.v5.broker", name: "mqtt_broker", autoConnect: false, cleansession: false, clientid: 'clientid', keepalive: 35, sessionExpiry: '6000', protocolVersion: '5', userProps: {"prop": "val"}}, { id: "mqtt.v5.in", topic: "in_topic" }, { id: "mqtt.v5.out", topic: "out_topic" });
+        await helper.load(mqttNodes, flow);
+        const mqttIn = helper.getNode("mqtt.v5.in");
+        const mqttOut = helper.getNode("mqtt.v5.out");
+        const mqttBroker = helper.getNode("mqtt.v5.broker");
 
-                should(mqttIn).be.type("object", "mqtt in node should be an object")
-                mqttIn.should.have.property('broker', nodes.mqtt_broker.id); //should be the id of the broker node
-                mqttIn.should.have.property('datatype', 'utf8'); //default: 'utf8'
-                mqttIn.should.have.property('isDynamic', false);  //default: false
-                mqttIn.should.have.property('inputs', 0); //default: 0 
-                mqttIn.should.have.property('qos', 2); //default: 2
-                mqttIn.should.have.property('topic', "in_topic");
-                mqttIn.should.have.property('wires', [["helper.node"]]);
+        should(mqttIn).be.type("object", "mqtt in node should be an object")
+        mqttIn.should.have.property('broker', nodes.mqtt_broker.id); //should be the id of the broker node
+        mqttIn.should.have.property('datatype', 'utf8'); //default: 'utf8'
+        mqttIn.should.have.property('isDynamic', false);  //default: false
+        mqttIn.should.have.property('inputs', 0); //default: 0 
+        mqttIn.should.have.property('qos', 2); //default: 2
+        mqttIn.should.have.property('topic', "in_topic");
+        mqttIn.should.have.property('wires', [["helper.node"]]);
 
-                should(mqttOut).be.type("object", "mqtt out node should be an object")
-                mqttOut.should.have.property('broker', nodes.mqtt_broker.id); //should be the id of the broker node
-                mqttOut.should.have.property('topic', "out_topic");
+        should(mqttOut).be.type("object", "mqtt out node should be an object")
+        mqttOut.should.have.property('broker', nodes.mqtt_broker.id); //should be the id of the broker node
+        mqttOut.should.have.property('topic', "out_topic");
 
-                should(mqttBroker).be.type("object", "mqtt broker node should be an object")
-                mqttBroker.should.have.property('broker', BROKER_HOST);
-                mqttBroker.should.have.property('port', BROKER_PORT);
-                mqttBroker.should.have.property('brokerurl');
-                mqttBroker.should.have.property('autoUnsubscribe', true);
-                mqttBroker.should.have.property('autoConnect', false); //Set "autoConnect:false" in brokerOptions
-                mqttBroker.should.have.property('options');
-                mqttBroker.options.should.have.property('clean', false);
-                mqttBroker.options.should.have.property('clientId', 'clientid');
-                mqttBroker.options.should.have.property('keepalive').type("number", 35);
-                mqttBroker.options.should.have.property('reconnectPeriod').type("number");
-                //as this IS a v5 connection, ensure v5 properties are not present
-                mqttBroker.options.should.have.property('protocolVersion', 5);
-                mqttBroker.options.should.have.property('properties');
-                mqttBroker.options.properties.should.have.property('sessionExpiryInterval');
-                done();
-            } catch (error) {
-                done(error)
-            }
-        });
+        should(mqttBroker).be.type("object", "mqtt broker node should be an object")
+        mqttBroker.should.have.property('broker', BROKER_HOST);
+        mqttBroker.should.have.property('port', BROKER_PORT);
+        mqttBroker.should.have.property('brokerurl');
+        mqttBroker.should.have.property('autoUnsubscribe', true);
+        mqttBroker.should.have.property('autoConnect', false); //Set "autoConnect:false" in brokerOptions
+        mqttBroker.should.have.property('options');
+        mqttBroker.options.should.have.property('clean', false);
+        mqttBroker.options.should.have.property('clientId', 'clientid');
+        mqttBroker.options.should.have.property('keepalive').type("number", 35);
+        mqttBroker.options.should.have.property('reconnectPeriod').type("number");
+        //as this IS a v5 connection, ensure v5 properties are not present
+        mqttBroker.options.should.have.property('protocolVersion', 5);
+        mqttBroker.options.should.have.property('properties');
+        mqttBroker.options.properties.should.have.property('sessionExpiryInterval');
+
     });
     it('should use the url from a repeated "connect" action', function (done) {
         const { flow } = buildBasicMQTTSendRecvFlow({ id: "mqtt.broker", name: "mqtt_broker", broker: "localhost", port: 1883, autoConnect: false }, { id: "mqtt.in", topic: "in_topic" }, { id: "mqtt.out", topic: "out_topic" });
@@ -916,3 +902,4 @@ function nextTopic(topic) {
 }
 
 //#endregion HELPERS 
+
